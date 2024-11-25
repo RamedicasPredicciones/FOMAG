@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import math
 from io import BytesIO
+import base64  # Importar librería para codificar en Base64
 
 # Función para cargar inventario (compartida entre ambas herramientas)
 def load_inventory_file():
@@ -26,7 +27,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Botón para descargar la plantilla
+# Función para generar el archivo de plantilla y convertirlo a Base64
 def descargar_plantilla():
     # Genera una plantilla vacía para descargar
     plantilla_data = {"cur": [], "codart": []}
@@ -35,11 +36,15 @@ def descargar_plantilla():
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         plantilla_df.to_excel(writer, index=False, sheet_name="Plantilla")
     output.seek(0)
-    return output
+    # Convertir a Base64
+    b64 = base64.b64encode(output.read()).decode()  # Codifica en Base64 y decodifica a cadena
+    return b64
 
+# Botón para descargar la plantilla
+plantilla_b64 = descargar_plantilla()
 st.markdown(
     f"""
-    <a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{descargar_plantilla().getvalue().decode()}" download="plantilla_faltantes.xlsx">
+    <a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{plantilla_b64}" download="plantilla_faltantes.xlsx">
         <button style="background-color: #FF5800; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">
             Descargar plantilla
         </button>
@@ -90,4 +95,6 @@ elif menu == "Generador de Alternativas":
                 data=to_excel(resultado_final_df),
                 file_name='alternativas_disponibles.xlsx',
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
             )
