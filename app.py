@@ -12,18 +12,22 @@ def load_inventory_file():
     return inventario_api_df
 
 # Función para descargar la plantilla (Base64)
-def descargar_plantilla():
-    plantilla_data = {"cur": [], "codart": []}
-    plantilla_df = pd.DataFrame(plantilla_data)
+def descargar_plantilla(url):
     output = BytesIO()
+    plantilla_df = pd.DataFrame()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         plantilla_df.to_excel(writer, index=False, sheet_name="Plantilla")
     output.seek(0)
     b64 = base64.b64encode(output.read()).decode()
-    return b64
+    return f"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}"
 
-# Encabezado común
-def render_encabezado():
+# Menú de navegación
+st.sidebar.title("Menú de Navegación")
+menu = st.sidebar.radio("Seleccione una herramienta:", ["Buscador de Alternativas", "Generador de Alternativas"])
+
+# Tool 1: Buscador de Alternativas
+if menu == "Buscador de Alternativas":
+    # Encabezado específico para esta herramienta
     st.markdown(
         """
         <h1 style="text-align: center; color: #FF5800; font-family: Arial, sans-serif;">
@@ -38,22 +42,14 @@ def render_encabezado():
         """,
         unsafe_allow_html=True
     )
-
-# Menú de navegación
-st.sidebar.title("Menú de Navegación")
-menu = st.sidebar.radio("Seleccione una herramienta:", ["Buscador de Alternativas", "Generador de Alternativas"])
-
-# Tool 1: Buscador de Alternativas
-if menu == "Buscador de Alternativas":
-    render_encabezado()
     
-    # Botón para descargar la plantilla
-    plantilla_b64 = descargar_plantilla()
+    # Botón para descargar la plantilla específica de esta herramienta
+    plantilla_b64 = descargar_plantilla("https://docs.google.com/spreadsheets/d/1CRTYE0hbMlV8FiOeVDgDjGUm7x8E-XA8/export?format=xlsx")
     st.markdown(
         f"""
-        <a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{plantilla_b64}" download="plantilla_faltantes.xlsx">
+        <a href="{plantilla_b64}" download="plantilla_faltantes.xlsx">
             <button style="background-color: #FF5800; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">
-                Descargar plantilla
+                Descargar plantilla Buscador
             </button>
         </a>
         """,
@@ -71,7 +67,34 @@ if menu == "Buscador de Alternativas":
 
 # Tool 2: Generador de Alternativas
 elif menu == "Generador de Alternativas":
-    render_encabezado()
+    # Encabezado específico para esta herramienta
+    st.markdown(
+        """
+        <h1 style="text-align: center; color: #FF5800; font-family: Arial, sans-serif;">
+            RAMEDICAS S.A.S.
+        </h1>
+        <h3 style="text-align: center; font-family: Arial, sans-serif; color: #3A86FF;">
+            Generador de Alternativas para Faltantes FOMAG
+        </h3>
+        <p style="text-align: center; font-family: Arial, sans-serif; color: #6B6B6B;">
+            Esta herramienta te permite buscar el código alternativa para cada faltante de los pedidos en Ramédicas con su respectivo inventario actual.
+        </p>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Botón para descargar la plantilla específica de esta herramienta
+    plantilla_b64 = descargar_plantilla("https://docs.google.com/spreadsheets/d/1CPMBfCiuXq2_l8KY68HgexD-kyNVJ2Ml/export?format=xlsx")
+    st.markdown(
+        f"""
+        <a href="{plantilla_b64}" download="plantilla_generador.xlsx">
+            <button style="background-color: #FF5800; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">
+                Descargar plantilla Generador
+            </button>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
 
     # Subir archivo de faltantes
     uploaded_file = st.file_uploader("Sube tu archivo de faltantes", type="xlsx")
@@ -106,3 +129,4 @@ elif menu == "Generador de Alternativas":
                 file_name='alternativas_disponibles.xlsx',
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+
