@@ -3,14 +3,14 @@ import pandas as pd
 import math
 from io import BytesIO
 
-# Función para cargar inventario (compartida entre ambas herramientas)
+# Función para cargar inventario desde Google Sheets
 def load_inventory_file():
     inventario_url = "https://docs.google.com/spreadsheets/d/1DVcPPILcqR0sxBZZAOt50lQzoKhoLCEx/export?format=xlsx"
     inventario_api_df = pd.read_excel(inventario_url, sheet_name="Hoja3")
     inventario_api_df.columns = inventario_api_df.columns.str.lower().str.strip()  # Asegurar nombres consistentes
     return inventario_api_df
 
-# Función para procesar alternativas (Tool 1)
+# Función para procesar alternativas (herramienta 1)
 def procesar_alternativas(faltantes_df, inventario_api_df):
     faltantes_df.columns = faltantes_df.columns.str.lower().str.strip()
     if not {'cur', 'codart'}.issubset(faltantes_df.columns):
@@ -32,7 +32,7 @@ def procesar_alternativas(faltantes_df, inventario_api_df):
     ).drop_duplicates()
     return alternativas_disponibles_df
 
-# Función para procesar faltantes (Tool 2)
+# Función para procesar faltantes (herramienta 2)
 def procesar_faltantes(faltantes_df, inventario_api_df, columnas_adicionales, bodega_seleccionada):
     faltantes_df.columns = faltantes_df.columns.str.lower().str.strip()
     inventario_api_df.columns = inventario_api_df.columns.str.lower().str.strip()
@@ -43,8 +43,8 @@ def procesar_faltantes(faltantes_df, inventario_api_df, columnas_adicionales, bo
     cur_faltantes = faltantes_df['cur'].unique()
     alternativas_inventario_df = inventario_api_df[inventario_api_df['cur'].isin(cur_faltantes)]
     if bodega_seleccionada:
-        alternativas_inventario_df = alternativas_inventario_df[alternativas_inventario_df['bodega'].isin(bodega_seleccionada)]
-    alternativas_disponibles_df = alternativas_inventario_df[alternativas_inventario_df['unidadespresentacionlote'] > 0]
+        alternativas_inventario_df = alternativas_inventario_df[inventario_api_df['bodega'].isin(bodega_seleccionada)]
+    alternativas_disponibles_df = alternativas_inventario_df[inventario_api_df['unidadespresentacionlote'] > 0]
     alternativas_disponibles_df.rename(columns={
         'codart': 'codart_alternativa',
         'opcion': 'opcion_alternativa',
@@ -79,7 +79,7 @@ def procesar_faltantes(faltantes_df, inventario_api_df, columnas_adicionales, bo
 st.sidebar.title("Menú de Navegación")
 menu = st.sidebar.radio("Seleccione una herramienta:", ["Buscador de Alternativas", "Generador de Alternativas"])
 
-# Tool 1: Buscador de Alternativas
+# Implementación de herramientas
 if menu == "Buscador de Alternativas":
     st.title("Buscador de Alternativas por Código de Artículo")
     uploaded_file = st.file_uploader("Sube un archivo con los productos faltantes (contiene 'codart' y 'cur')", type=["xlsx", "csv"])
@@ -90,7 +90,6 @@ if menu == "Buscador de Alternativas":
         if not alternativas_disponibles_df.empty:
             st.dataframe(alternativas_disponibles_df)
 
-# Tool 2: Generador de Alternativas
 elif menu == "Generador de Alternativas":
     st.title("Generador de Alternativas para Faltantes")
     uploaded_file = st.file_uploader("Sube tu archivo de faltantes", type="xlsx")
